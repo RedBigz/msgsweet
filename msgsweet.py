@@ -7,7 +7,7 @@ from PIL import Image, ImageFont, ImageDraw
 import moviepy.editor as ed
 from PIL.Image import Dither
 from string import ascii_letters
-from random import choice
+from random import choice, randint
 
 col = 15
 
@@ -47,7 +47,7 @@ def main(args):
 
     shutil.copy(os.path.join("blends", args.style, "main.blend"), subf("main.blend"))
 
-    args.input = ["img", get_fortune()]
+    args.input = [f"img/{randint(1, 3)}.jpg", get_fortune()]
 
     with open(os.path.join("blends", args.style, "settings"), "r") as l:
         s = l.read().strip().split()
@@ -78,6 +78,9 @@ def main(args):
                     if (wc * lc) < len(args.input[i]) or len(textwrap.wrap(args.input[i], wc)) > lc:
                         font = ImageFont.truetype("arial.ttf", fs)
                         break
+                
+                if font == None:
+                    raise ValueError("Fortune message too large, please re-execute program.")
                 
                 print(tw, th, lc, wc, font.size)
                     
