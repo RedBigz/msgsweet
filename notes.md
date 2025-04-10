@@ -22,3 +22,4 @@ ideas:
 
 additions:
 - HIP support (see commit: `7eaba29242b0673298a42be3ff067dbd0109e2d7`) [fulfills #3, but it feels lazy, i might add some more stuff in]
+- all ideas above
