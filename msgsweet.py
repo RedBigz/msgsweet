@@ -23,7 +23,7 @@ def skip(l: list):
     return newlist
 
 def main(args):
-    device = "CPU" if args.cpu else ( "OPTIX" if args.rtx else ( "CUDA" if args.cuda else "CPU" ) )
+    device = "CPU" if args.cpu else ( "OPTIX" if args.rtx else ( "CUDA" if args.cuda else ( "HIP" if args.hip else "CPU" ) ) )
 
     folder = ".msgsweet-" + hashlib.md5(str(time.time()).encode()).hexdigest()
 
@@ -90,6 +90,7 @@ if __name__ == "__main__":
     parser.add_argument("-cpu", default=False, action="store_true", help="Use CPU when rendering")
     parser.add_argument("-rtx", default=False, action="store_true", help="Use OptiX (RTX 2060 - RTX 4090)")
     parser.add_argument("-cuda", default=False, action="store_true", help="Enable CUDA (CUDA 3.0 or later, ~GTX 650+)")
+    parser.add_argument("-hip", default=False, action="store_true", help="Enable HIP (AMD)")
     parser.add_argument("--blender-path", dest="blender", default="C:/Program Files/Blender Foundation/Blender 4.0/blender.exe", help="Custom Blender Path (defaults to Blender 4.0)")
     
     parser.add_argument("--style", "-s", default="heart")
