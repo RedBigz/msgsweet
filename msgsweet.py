@@ -6,6 +6,8 @@ import shutil
 from PIL import Image, ImageFont, ImageDraw
 import moviepy.editor as ed
 from PIL.Image import Dither
+from string import ascii_letters
+from random import choice
 
 col = 15
 
@@ -21,6 +23,13 @@ def skip(l: list):
             newlist.append(item)
     
     return newlist
+
+fortunes = []
+
+with open("fortunes.txt", "r") as fd:
+    fortunes = [fort.strip() for fort in fd.read().split("%")]
+
+get_fortune = lambda: choice(fortunes)
 
 def main(args):
     device = "CPU" if args.cpu else ( "OPTIX" if args.rtx else ( "CUDA" if args.cuda else ( "HIP" if args.hip else "CPU" ) ) )
@@ -38,6 +47,8 @@ def main(args):
 
     shutil.copy(os.path.join("blends", args.style, "main.blend"), subf("main.blend"))
 
+    args.input = ["img", get_fortune()]
+
     with open(os.path.join("blends", args.style, "settings"), "r") as l:
         s = l.read().strip().split()
         fps = int(s[0])
@@ -47,13 +58,37 @@ def main(args):
                 shutil.copy(args.input[i], subf(name))
             else:
                 img = Image.new(mode="RGB", size=(512, 512))
-                font = ImageFont.truetype("arial.ttf", 62)
+                bbox = [0, 0, 513, 0]
+
                 draw = ImageDraw.Draw(img)
                 draw.rectangle((0, 0, 511, 511), fill="white")
-                wrapped = textwrap.wrap(args.input[i], col)
+
+                font = None
+                tw, th, lc, wc = 0, 0, 0, 0 # text width, text height, line count, word wrap columns
+
+                for fs in range(5, 65):
+                    font = ImageFont.truetype("arial.ttf", fs)
+
+                    tw = sum(font.getbbox(char)[2] for char in ascii_letters) / len(ascii_letters) # get average width of text character
+                    th = max(font.getbbox(char)[3] - font.getbbox(char)[1] for char in ascii_letters) # get max height of text character
+
+                    lc = int(512 / th)
+                    wc = int(512 / tw)
+
+                    if (wc * lc) < len(args.input[i]) or len(textwrap.wrap(args.input[i], wc)) > lc:
+                        font = ImageFont.truetype("arial.ttf", fs)
+                        break
                 
+                print(tw, th, lc, wc, font.size)
+                    
+                wrapped = textwrap.wrap(args.input[i], wc)
+
+                print(wrapped, len(wrapped))
+
+                th -= 3 # pack together more
+
                 for i, wrap in enumerate(wrapped):
-                    height = int(0 - (len(wrapped) - 1) * 36 + i * 72)
+                    height = int(0 - (len(wrapped) - 1) * th / 2 + i * th)
                     _, _, w, h = draw.textbbox((0, 0), wrap, font=font)
                     draw.text((256 - int(w/2), 256 - int(h/2) + height), wrap, font=font, fill="black")
                 
@@ -83,7 +118,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="MakeSweet in Python + Cycles")
+    parser = argparse.ArgumentParser(description="MakeSweet in Python + Cycles (FORTUNE EDITION)")
 
     parser.add_argument("--output", "-o", default="output")
 
@@ -94,7 +129,7 @@ if __name__ == "__main__":
     parser.add_argument("--blender-path", dest="blender", default="C:/Program Files/Blender Foundation/Blender 4.0/blender.exe", help="Custom Blender Path (defaults to Blender 4.0)")
     
     parser.add_argument("--style", "-s", default="heart")
-    parser.add_argument("input", nargs="+")
+    # parser.add_argument("input", nargs="+")
 
 
     parsed = parser.parse_args()
